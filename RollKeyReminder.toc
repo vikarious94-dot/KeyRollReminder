@@ -1,0 +1,9 @@
+## Interface: 120000
+## Title: RollKeyReminder
+## Notes: Rappel de roll de clé Mythic+
+## Author: Vikarious
+## Version: 1.0
+
+RollKeyReminder.lua
+Core/Events.lua
+Core/UI.lua
