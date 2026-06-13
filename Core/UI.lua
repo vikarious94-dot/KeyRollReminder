@@ -1,4 +1,4 @@
-local RollKeyReminder = _G.RollKeyReminder
+local KeyRollReminder = _G.KeyRollReminder
 local locale = GetLocale()
 
 --[[
@@ -16,7 +16,7 @@ if locale == "frFR" then
     L.buttonOK = "Ok chef"
 end
 
-function RollKeyReminder:ShowReminder()
+function KeyRollReminder:ShowReminder()
     --[[
     RaidNotice_AddMessage(
         RaidWarningFrame,
@@ -28,7 +28,7 @@ function RollKeyReminder:ShowReminder()
     --]]
 
     if not self.frame then
-        local frame = CreateFrame("Frame", "RollKeyReminderFrame", UIParent, "BasicFrameTemplateWithInset")
+        local frame = CreateFrame("Frame", "KeyRollReminderFrame", UIParent, "BasicFrameTemplateWithInset")
         frame:SetSize(400, 150)
         frame:SetPoint("CENTER", UIParent, "CENTER", 0, 300)
         frame:SetFrameStrata("DIALOG")

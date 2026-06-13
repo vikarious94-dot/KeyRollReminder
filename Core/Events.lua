@@ -1,4 +1,4 @@
-local RollKeyReminder = _G.RollKeyReminder
+local KeyRollReminder = _G.KeyRollReminder
 local frame = CreateFrame("Frame")
 
 --[[
@@ -9,10 +9,10 @@ print("Events.lua chargé")
 local function HookStartButton()
     if ChallengesKeystoneFrame
        and ChallengesKeystoneFrame.StartButton
-       and not RollKeyReminder.startButtonHooked then
+       and not KeyRollReminder.startButtonHooked then
 
         ChallengesKeystoneFrame.StartButton:HookScript("OnClick", function()
-            RollKeyReminder.iClickedStart = true
+            KeyRollReminder.iClickedStart = true
 
             --[[
             print("J'ai cliqué sur le bouton de lancement")
@@ -22,7 +22,7 @@ local function HookStartButton()
 
         end)
 
-        RollKeyReminder.startButtonHooked = true
+        KeyRollReminder.startButtonHooked = true
 
         --[[
         print("Bouton de lancement hooké")
@@ -34,10 +34,10 @@ local function HookStartButton()
 end
 
 local function ResetData()
-    RollKeyReminderDB.shouldRemind = false
-    RollKeyReminder.iClickedStart = false
-    RollKeyReminder.dungeonKeyLevel = nil
-    RollKeyReminder.myKeyWasUsed = nil
+    KeyRollReminderDB.shouldRemind = false
+    KeyRollReminder.iClickedStart = false
+    KeyRollReminder.dungeonKeyLevel = nil
+    KeyRollReminder.myKeyWasUsed = nil
 end
 
 frame:RegisterEvent("ADDON_LOADED")
@@ -64,13 +64,13 @@ frame:SetScript("OnEvent", function(self, event, ...)
             local instanceName, instanceType = GetInstanceInfo()
 
             if instanceType == "party" then
-                RollKeyReminder.myKeyLevel = C_MythicPlus.GetOwnedKeystoneLevel()
+                KeyRollReminder.myKeyLevel = C_MythicPlus.GetOwnedKeystoneLevel()
 
                 --[[
                 print("Entrée en donjon :", instanceName)
-                print("Ma clé :", RollKeyReminder.myKeyLevel)
+                print("Ma clé :", KeyRollReminder.myKeyLevel)
                 print("PLAYER_ENTERING_WORLD")
-                print("shouldRemind =", tostring(RollKeyReminderDB.shouldRemind))
+                print("shouldRemind =", tostring(KeyRollReminderDB.shouldRemind))
                 
                 ]]
                 
@@ -79,41 +79,41 @@ frame:SetScript("OnEvent", function(self, event, ...)
 
     elseif event == "CHALLENGE_MODE_START" then
 
-        RollKeyReminder.dungeonKeyLevel = C_ChallengeMode.GetActiveKeystoneInfo()
+        KeyRollReminder.dungeonKeyLevel = C_ChallengeMode.GetActiveKeystoneInfo()
 
         --[[
         print("Début MM+ détecté")
-        print("Ma clé :", RollKeyReminder.myKeyLevel)
-        print("Clé lancée :", RollKeyReminder.dungeonKeyLevel)
-        print("Avant calcul :", tostring(RollKeyReminderDB.shouldRemind))
+        print("Ma clé :", KeyRollReminder.myKeyLevel)
+        print("Clé lancée :", KeyRollReminder.dungeonKeyLevel)
+        print("Avant calcul :", tostring(KeyRollReminderDB.shouldRemind))
         
         ]]
         
 
-        RollKeyReminderDB.shouldRemind =
-            not RollKeyReminder.iClickedStart
-            and RollKeyReminder.myKeyLevel
-            and RollKeyReminder.dungeonKeyLevel
-            and RollKeyReminder.dungeonKeyLevel >= RollKeyReminder.myKeyLevel
+        KeyRollReminderDB.shouldRemind =
+            not KeyRollReminder.iClickedStart
+            and KeyRollReminder.myKeyLevel
+            and KeyRollReminder.dungeonKeyLevel
+            and KeyRollReminder.dungeonKeyLevel >= KeyRollReminder.myKeyLevel
 
         --[[
-        print("Après calcul :", tostring(RollKeyReminderDB.shouldRemind))
+        print("Après calcul :", tostring(KeyRollReminderDB.shouldRemind))
         
         ]]
         
 
-        RollKeyReminder.iClickedStart = false
+        KeyRollReminder.iClickedStart = false
 
     elseif event == "CHALLENGE_MODE_COMPLETED" then
 
         --[[
         print("Donjon terminé")
-        print("Reminder nécessaire :", tostring(RollKeyReminderDB.shouldRemind))
+        print("Reminder nécessaire :", tostring(KeyRollReminderDB.shouldRemind))
         
         ]]
         
 
-        if RollKeyReminderDB.shouldRemind then
+        if KeyRollReminderDB.shouldRemind then
 
             --[[
             print("Affichage du reminder")
@@ -121,7 +121,7 @@ frame:SetScript("OnEvent", function(self, event, ...)
             ]]
             
 
-            RollKeyReminder:ShowReminder()
+            KeyRollReminder:ShowReminder()
 
             ResetData()
         end

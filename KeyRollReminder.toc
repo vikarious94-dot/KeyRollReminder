@@ -1,10 +1,10 @@
 ## Interface: 120000
-## Title: RollKeyReminder
+## Title: KeyRollReminder
 ## Notes: Rappel de roll de clé Mythic+
 ## Author: Vikarious
 ## Version: 1.0
-## SavedVariables: RollKeyReminderDB
+## SavedVariables: KeyRollReminderDB
 
-RollKeyReminder.lua
+KeyRollReminder.lua
 Core/Events.lua
 Core/UI.lua
