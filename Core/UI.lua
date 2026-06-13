@@ -1,16 +1,26 @@
 local RollKeyReminder = _G.RollKeyReminder
+local locale = GetLocale()
 
 --[[
 print("UI.lua chargé")
 
 ]]
 
+local L = {
+    reminderMessage = "Remember to roll your Mythic+ key!",
+    buttonOK = "Ok",
+}
+
+if locale == "frFR" then
+    L.reminderMessage = "Pense à roll ta clé Mythic+ !"
+    L.buttonOK = "Ok chef"
+end
 
 function RollKeyReminder:ShowReminder()
     --[[
     RaidNotice_AddMessage(
         RaidWarningFrame,
-        "PENSE À ROLL TA CLÉ !",
+        L.reminderMessage,
         ChatTypeInfo["RAID_WARNING"]
     )
     
@@ -22,15 +32,17 @@ function RollKeyReminder:ShowReminder()
         frame:SetSize(400, 150)
         frame:SetPoint("CENTER", UIParent, "CENTER", 0, 300)
         frame:SetFrameStrata("DIALOG")
+        frame.CloseButton:Hide()
+        frame.CloseButton:SetScript("OnShow", frame.CloseButton.Hide)
 
         frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         frame.title:SetPoint("TOP", frame, "TOP", 0, -40)
-        frame.title:SetText("Pense à roll ta clé Mythic+ !")
+        frame.title:SetText(L.reminderMessage)
 
         local okButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
         okButton:SetSize(80, 22)
         okButton:SetPoint("BOTTOM", frame, "BOTTOM", 0, 15)
-        okButton:SetText("OK Chef")
+        okButton:SetText(L.buttonOK)
 
         okButton:SetScript("OnClick", function()
             frame:Hide()
