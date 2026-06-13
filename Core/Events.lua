@@ -1,7 +1,10 @@
 local RollKeyReminder = _G.RollKeyReminder
 local frame = CreateFrame("Frame")
 
+--[[
 print("Events.lua chargé")
+
+]]
 
 local function HookStartButton()
     if ChallengesKeystoneFrame
