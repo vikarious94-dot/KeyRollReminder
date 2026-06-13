@@ -1,6 +1,10 @@
 local RollKeyReminder = _G.RollKeyReminder
 
+--[[
 print("UI.lua chargé")
+
+]]
+
 
 function RollKeyReminder:ShowReminder()
     --[[

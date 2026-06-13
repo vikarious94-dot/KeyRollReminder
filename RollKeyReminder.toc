@@ -3,6 +3,7 @@
 ## Notes: Rappel de roll de clé Mythic+
 ## Author: Vikarious
 ## Version: 1.0
+## SavedVariables: RollKeyReminderDB
 
 RollKeyReminder.lua
 Core/Events.lua
