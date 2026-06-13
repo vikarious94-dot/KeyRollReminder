@@ -2,7 +2,7 @@
 
 > Never forget to roll your key after a Mythic+ run.
 
-RollKeyReminder is a lightweight World of Warcraft addon that reminds you to offer your own keystone when appropriate after completing a Mythic+ dungeon.
+RollKeyReminder is a lightweight World of Warcraft addon that reminds you to reroll your own keystone after completing a Mythic+ dungeon.
 
 The addon automatically detects whether the dungeon was started with your key or someone else's and displays a reminder only when it makes sense.
 
