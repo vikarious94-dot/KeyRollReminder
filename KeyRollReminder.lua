@@ -7,13 +7,10 @@ KeyRollReminderDB = KeyRollReminderDB or {}
 KeyRollReminderDB.shouldRemind = KeyRollReminderDB.shouldRemind or false
 
 KeyRollReminder.name = "KeyRollReminder"
-KeyRollReminder.version = "1.0"
-KeyRollReminder.lastReminder = 0
-KeyRollReminder.lastRunLevel = nil
-KeyRollReminder.lastRunTimed = nil
+KeyRollReminder.debug = false
 
---[[
-print("KeyRollReminder.lua chargé")
-print("shouldRemind au chargement =", tostring(KeyRollReminderDB and KeyRollReminderDB.shouldRemind))
-
-]]
+function KeyRollReminder:Debug(...)
+    if self.debug then
+        print("|cff00ff00KeyRollReminder:|r", ...)
+    end
+end

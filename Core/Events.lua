@@ -1,44 +1,19 @@
 local KeyRollReminder = _G.KeyRollReminder
 local frame = CreateFrame("Frame")
 
---[[
-print("Events.lua chargé")
-
-]]
-
 local function HookStartButton()
     if ChallengesKeystoneFrame
-       and ChallengesKeystoneFrame.StartButton
-       and not KeyRollReminder.startButtonHooked then
+        and ChallengesKeystoneFrame.StartButton
+        and not KeyRollReminder.startButtonHooked then
 
         ChallengesKeystoneFrame.StartButton:HookScript("OnClick", function()
             KeyRollReminder.iClickedStart = true
-
-            --[[
-            print("J'ai cliqué sur le bouton de lancement")
-            
-            ]]
-            
-
+            KeyRollReminder:Debug("Start button clicked")
         end)
 
         KeyRollReminder.startButtonHooked = true
-
-        --[[
-        print("Bouton de lancement hooké")
-        
-        ]]
-        
-
+        KeyRollReminder:Debug("Start button hooked")
     end
-end
-
-local function ResetData()
-    KeyRollReminderDB.shouldRemind = false
-    KeyRollReminder.iClickedStart = false
-    KeyRollReminder.dungeonKeyLevel = nil
-    KeyRollReminder.myKeyWasUsed = nil
-    KeyRollReminder.myKeyMapID = nil
 end
 
 frame:RegisterEvent("ADDON_LOADED")
@@ -48,7 +23,6 @@ frame:RegisterEvent("CHALLENGE_MODE_COMPLETED")
 frame:RegisterEvent("CHALLENGE_MODE_RESET")
 
 frame:SetScript("OnEvent", function(self, event, ...)
-
     if event == "ADDON_LOADED" then
         local addonName = ...
 
@@ -57,81 +31,30 @@ frame:SetScript("OnEvent", function(self, event, ...)
         end
 
     elseif event == "PLAYER_ENTERING_WORLD" then
-
         C_Timer.After(1, function()
-
             HookStartButton()
 
             local instanceName, instanceType = GetInstanceInfo()
-
             if instanceType == "party" then
-                KeyRollReminder.myKeyLevel = C_MythicPlus.GetOwnedKeystoneLevel()
-                KeyRollReminder.myKeyMapID = C_MythicPlus.GetOwnedKeystoneChallengeMapID
-                    and C_MythicPlus.GetOwnedKeystoneChallengeMapID()
-                    or nil
-
-                --[[
-                print("Entrée en donjon :", instanceName)
-                print("Ma clé :", KeyRollReminder.myKeyLevel)
-                print("PLAYER_ENTERING_WORLD")
-                print("shouldRemind =", tostring(KeyRollReminderDB.shouldRemind))
-                
-                ]]
-                
+                KeyRollReminder:RefreshOwnedKeystone()
+                KeyRollReminder:Debug("Entered dungeon", instanceName, "owned key", KeyRollReminder.myKeyLevel)
             end
         end)
 
     elseif event == "CHALLENGE_MODE_START" then
-
-        KeyRollReminder.dungeonKeyLevel = C_ChallengeMode.GetActiveKeystoneInfo()
-
-        --[[
-        print("Début MM+ détecté")
-        print("Ma clé :", KeyRollReminder.myKeyLevel)
-        print("Clé lancée :", KeyRollReminder.dungeonKeyLevel)
-        print("Avant calcul :", tostring(KeyRollReminderDB.shouldRemind))
-        
-        ]]
-        
-
-        KeyRollReminderDB.shouldRemind =
-            not KeyRollReminder.iClickedStart
-            and KeyRollReminder.myKeyLevel
-            and KeyRollReminder.dungeonKeyLevel
-            and KeyRollReminder.dungeonKeyLevel >= KeyRollReminder.myKeyLevel
-
-        --[[
-        print("Après calcul :", tostring(KeyRollReminderDB.shouldRemind))
-        
-        ]]
-        
+        KeyRollReminder:CaptureActiveKeystone()
+        KeyRollReminderDB.shouldRemind = KeyRollReminder:ShouldRemindForCompletedRun()
+        KeyRollReminder:Debug("Challenge started", "owned key", KeyRollReminder.myKeyLevel, "active key", KeyRollReminder.dungeonKeyLevel, "should remind", KeyRollReminderDB.shouldRemind)
 
         KeyRollReminder.iClickedStart = false
 
     elseif event == "CHALLENGE_MODE_COMPLETED" then
-
-        --[[
-        print("Donjon terminé")
-        print("Reminder nécessaire :", tostring(KeyRollReminderDB.shouldRemind))
-        
-        ]]
-        
-
         if KeyRollReminderDB.shouldRemind then
-
-            --[[
-            print("Affichage du reminder")
-            
-            ]]
-            
-
             KeyRollReminder:ShowReminder()
-
-            ResetData()
+            KeyRollReminder:ResetRunData()
         end
 
     elseif event == "CHALLENGE_MODE_RESET" then
-
-        ResetData()
+        KeyRollReminder:ResetRunData()
     end
 end)

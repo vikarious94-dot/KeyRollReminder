@@ -2,9 +2,13 @@
 ## Title: KeyRollReminder
 ## Notes: Mythic+ Keystone Roll Reminder
 ## Author: Vikarious
-## Version: 1.0.7
+## Version: 1.0.8
+## X-Curse-Project-ID: 1573715
 ## SavedVariables: KeyRollReminderDB
+## IconTexture: Interface\AddOns\KeyRollReminder\media\icon.tga
 
 KeyRollReminder.lua
+Core/Locale.lua
+Core/Keystone.lua
 Core/Events.lua
 Core/UI.lua

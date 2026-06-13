@@ -23,8 +23,8 @@ World of Warcraft\_retail_\Interface\AddOns\
 
 ```text
 Interface
-└── AddOns
-    └── KeyRollReminder
+  AddOns
+    KeyRollReminder
 ```
 
 4. Launch the game or type:
