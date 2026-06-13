@@ -38,6 +38,7 @@ local function ResetData()
     KeyRollReminder.iClickedStart = false
     KeyRollReminder.dungeonKeyLevel = nil
     KeyRollReminder.myKeyWasUsed = nil
+    KeyRollReminder.myKeyMapID = nil
 end
 
 frame:RegisterEvent("ADDON_LOADED")
@@ -65,6 +66,9 @@ frame:SetScript("OnEvent", function(self, event, ...)
 
             if instanceType == "party" then
                 KeyRollReminder.myKeyLevel = C_MythicPlus.GetOwnedKeystoneLevel()
+                KeyRollReminder.myKeyMapID = C_MythicPlus.GetOwnedKeystoneChallengeMapID
+                    and C_MythicPlus.GetOwnedKeystoneChallengeMapID()
+                    or nil
 
                 --[[
                 print("Entrée en donjon :", instanceName)
