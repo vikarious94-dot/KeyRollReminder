@@ -1,4 +1,10 @@
 # Changelog
+## Unreleased
+
+### Changed
+- Refreshed the reminder popup layout with an icon, left-aligned content, and a compact native frame.
+- Made the reminder popup movable.
+
 ## 1.0.8 - 2026-06-14
 
 ### Added
