@@ -1,6 +1,18 @@
 # Changelog
 ## Unreleased
 
+### Changed
+- Refreshed the reminder popup layout with an icon, left-aligned content, and a compact native frame.
+- Made the reminder popup movable.
+- Saved the reminder popup position between sessions.
+- Added a helper to reset the reminder popup position.
+- Added Shift-click on the OK button to reset the reminder popup position without closing it.
+- Added a tooltip to explain the OK button and Shift-click position reset.
+- Allowed the reminder popup to be closed with Escape.
+- Added a reminder sound when the popup appears.
+- Replaced the reminder sound with a softer UI sound.
+- Added a soft close sound when the reminder popup is dismissed.
+
 ### Fixed
 - Prevented the reminder from appearing after a run started by the player.
 - Made the keystone start button hook more reliable when the keystone receptacle opens.

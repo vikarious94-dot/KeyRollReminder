@@ -7,6 +7,8 @@ local L = {
     ownedKeyLevelOnlyFormat = "Key in your bags: +%d",
     ownedKeyMissing = "No keystone found in your bags",
     buttonOK = "Ok",
+    buttonOKTooltip = "Close this reminder.",
+    buttonOKTooltipShift = "Shift-click to reset the window position.",
 }
 
 if locale == "frFR" then
@@ -15,6 +17,8 @@ if locale == "frFR" then
     L.ownedKeyLevelOnlyFormat = "Cle en sac : +%d"
     L.ownedKeyMissing = "Aucune cle trouvee en sac"
     L.buttonOK = "Ok chef"
+    L.buttonOKTooltip = "Fermer ce rappel."
+    L.buttonOKTooltipShift = "Maj-clic pour reinitialiser la position de la fenetre."
 end
 
 KeyRollReminder.L = L
