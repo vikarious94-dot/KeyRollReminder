@@ -1,4 +1,10 @@
 # Changelog
+## Unreleased
+
+### Fixed
+- Prevented the reminder from appearing after a run started by the player.
+- Made the keystone start button hook more reliable when the keystone receptacle opens.
+
 ## 1.0.8 - 2026-06-14
 
 ### Added

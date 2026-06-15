@@ -1,4 +1,5 @@
 local KeyRollReminder = _G.KeyRollReminder
+local PLAYER_START_GRACE_SECONDS = 10
 
 local function SafeCall(func, ...)
     if not func then
@@ -11,6 +12,10 @@ local function SafeCall(func, ...)
     end
 
     return nil
+end
+
+local function GetCurrentTime()
+    return GetTime and GetTime() or time()
 end
 
 function KeyRollReminder:RefreshOwnedKeystone()
@@ -48,8 +53,20 @@ function KeyRollReminder:CaptureActiveKeystone()
     return self.dungeonKeyLevel
 end
 
+function KeyRollReminder:MarkRunStartedByPlayer()
+    self.iClickedStart = true
+    self.runStartedByPlayer = true
+    self.playerStartTime = GetCurrentTime()
+    KeyRollReminderDB.shouldRemind = false
+end
+
+function KeyRollReminder:WasRecentlyStartedByPlayer()
+    return self.playerStartTime
+        and GetCurrentTime() - self.playerStartTime <= PLAYER_START_GRACE_SECONDS
+end
+
 function KeyRollReminder:ShouldRemindForCompletedRun()
-    return not self.iClickedStart
+    return not (self.iClickedStart or self.runStartedByPlayer or self:WasRecentlyStartedByPlayer())
         and self.myKeyLevel
         and self.dungeonKeyLevel
         and self.dungeonKeyLevel >= self.myKeyLevel
@@ -58,6 +75,7 @@ end
 function KeyRollReminder:ResetRunData()
     KeyRollReminderDB.shouldRemind = false
     self.iClickedStart = false
+    self.runStartedByPlayer = false
     self.dungeonKeyLevel = nil
     self.myKeyWasUsed = nil
     self.myKeyMapID = nil
