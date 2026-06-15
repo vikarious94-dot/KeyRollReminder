@@ -1,4 +1,10 @@
 # Changelog
+## Unreleased
+
+### Added
+- Added `/krr` and `/keyrollreminder` commands to open a group keystone window.
+- Added an initial group keystone window showing the player's key and group member slots.
+
 ## 1.1.0 - 2026-06-15
 
 ### Added
