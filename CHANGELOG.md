@@ -11,7 +11,6 @@
 ### Changed
 - Refreshed the reminder popup layout with an icon, left-aligned content, and a compact native frame.
 - Made the reminder popup movable.
-- Replaced the reminder sound with a softer UI sound.
 
 ### Fixed
 - Prevented the reminder from appearing after a run started by the player.
