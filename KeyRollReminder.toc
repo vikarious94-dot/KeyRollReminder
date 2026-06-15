@@ -2,7 +2,7 @@
 ## Title: KeyRollReminder
 ## Notes: Mythic+ Keystone Roll Reminder
 ## Author: Vikarious
-## Version: 1.0.8
+## Version: 1.1.0
 ## X-Curse-Project-ID: 1573715
 ## SavedVariables: KeyRollReminderDB
 ## IconTexture: Interface\AddOns\KeyRollReminder\media\icon.tga

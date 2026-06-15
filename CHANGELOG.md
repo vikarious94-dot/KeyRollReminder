@@ -1,5 +1,5 @@
 # Changelog
-## Unreleased
+## 1.1.0 - 2026-06-15
 
 ### Added
 - Added reminder popup position persistence between sessions.
