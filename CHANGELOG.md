@@ -1,4 +1,9 @@
 # Changelog
+## 1.1.1 - 2026-06-16
+
+### Fixed
+- Updated the TOC interface version for WoW 12.0.7.
+
 ## 1.1.0 - 2026-06-15
 
 ### Added
