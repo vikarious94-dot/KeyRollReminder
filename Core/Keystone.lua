@@ -14,8 +14,77 @@ local function SafeCall(func, ...)
     return nil
 end
 
+local function SafeCallValues(func, ...)
+    if not func then
+        return nil
+    end
+
+    local ok, value1, value2, value3, value4, value5 = pcall(func, ...)
+    if ok then
+        return value1, value2, value3, value4, value5
+    end
+
+    return nil
+end
+
 local function GetCurrentTime()
     return GetTime and GetTime() or time()
+end
+
+function KeyRollReminder:GetChallengeMapShortName(mapName)
+    if not mapName then
+        return nil
+    end
+
+    local lastWord
+    for word in string.gmatch(mapName, "[%a%-']+") do
+        lastWord = word
+    end
+
+    if not lastWord then
+        return nil
+    end
+
+    lastWord = string.gsub(lastWord, "[%-']", "")
+    return string.upper(string.sub(lastWord, 1, 6))
+end
+
+function KeyRollReminder:GetChallengeMapDisplayInfo(mapID)
+    if not mapID then
+        return nil, nil
+    end
+
+    local mapName, _, _, texture = SafeCallValues(C_ChallengeMode and C_ChallengeMode.GetMapUIInfo, mapID)
+    return mapName, texture
+end
+
+function KeyRollReminder:GetChallengeMapIconMarkup(mapID, size)
+    local _, texture = self:GetChallengeMapDisplayInfo(mapID)
+
+    if not texture then
+        return nil
+    end
+
+    size = size or 22
+    return string.format("|T%s:%d:%d:0:0|t", texture, size, size)
+end
+
+function KeyRollReminder:FormatKeystoneText(mapName, level, mapID)
+    local L = self.L
+
+    if not level or level <= 0 then
+        return L.ownedKeyMissing
+    end
+
+    if mapName then
+        local icon = self:GetChallengeMapIconMarkup(mapID)
+        local shortName = self:GetChallengeMapShortName(mapName)
+        local displayName = icon and string.format("%s |cff00ccff%s|r %s", icon, shortName or "", mapName) or mapName
+
+        return string.format(L.ownedKeyFormat, displayName, level)
+    end
+
+    return string.format(L.ownedKeyLevelOnlyFormat, level)
 end
 
 function KeyRollReminder:RefreshOwnedKeystone()
@@ -28,24 +97,13 @@ end
 function KeyRollReminder:GetOwnedKeystoneInfo()
     local level = SafeCall(C_MythicPlus and C_MythicPlus.GetOwnedKeystoneLevel) or self.myKeyLevel
     local mapID = SafeCall(C_MythicPlus and C_MythicPlus.GetOwnedKeystoneChallengeMapID) or self.myKeyMapID
-    local mapName = mapID and SafeCall(C_ChallengeMode and C_ChallengeMode.GetMapUIInfo, mapID)
+    local mapName = self:GetChallengeMapDisplayInfo(mapID)
 
     return mapName, level, mapID
 end
 
 function KeyRollReminder:GetOwnedKeystoneText()
-    local L = self.L
-    local mapName, level = self:GetOwnedKeystoneInfo()
-
-    if not level or level <= 0 then
-        return L.ownedKeyMissing
-    end
-
-    if mapName then
-        return string.format(L.ownedKeyFormat, mapName, level)
-    end
-
-    return string.format(L.ownedKeyLevelOnlyFormat, level)
+    return self:FormatKeystoneText(self:GetOwnedKeystoneInfo())
 end
 
 function KeyRollReminder:CaptureActiveKeystone()

@@ -27,6 +27,8 @@ end
 
 frame:RegisterEvent("ADDON_LOADED")
 frame:RegisterEvent("PLAYER_ENTERING_WORLD")
+frame:RegisterEvent("CHAT_MSG_ADDON")
+frame:RegisterEvent("GROUP_ROSTER_UPDATE")
 frame:RegisterEvent("CHALLENGE_MODE_KEYSTONE_RECEPTABLE_OPEN")
 frame:RegisterEvent("CHALLENGE_MODE_START")
 frame:RegisterEvent("CHALLENGE_MODE_COMPLETED")
@@ -35,6 +37,10 @@ frame:RegisterEvent("CHALLENGE_MODE_RESET")
 frame:SetScript("OnEvent", function(self, event, ...)
     if event == "ADDON_LOADED" then
         local addonName = ...
+
+        if addonName == KeyRollReminder.name then
+            KeyRollReminder:RegisterGroupKeystoneMessages()
+        end
 
         if addonName == "Blizzard_ChallengesUI" then
             ScheduleStartButtonHook()
@@ -50,6 +56,16 @@ frame:SetScript("OnEvent", function(self, event, ...)
                 KeyRollReminder:Debug("Entered dungeon", instanceName, "owned key", KeyRollReminder.myKeyLevel)
             end
         end)
+
+    elseif event == "CHAT_MSG_ADDON" then
+        KeyRollReminder:HandleGroupKeystoneMessage(...)
+
+    elseif event == "GROUP_ROSTER_UPDATE" then
+        KeyRollReminder:ClearGroupKeystoneCache()
+        if KeyRollReminder.groupFrame and KeyRollReminder.groupFrame:IsShown() then
+            KeyRollReminder:UpdateGroupKeystoneFrame()
+            KeyRollReminder:RequestGroupKeystones()
+        end
 
     elseif event == "CHALLENGE_MODE_KEYSTONE_RECEPTABLE_OPEN" then
         ScheduleStartButtonHook()
