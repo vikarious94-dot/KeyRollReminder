@@ -1,8 +1,8 @@
-## Interface: 120000, 120001, 120005
+## Interface: 120000, 120001, 120005, 120007
 ## Title: KeyRollReminder
 ## Notes: Mythic+ Keystone Roll Reminder
 ## Author: Vikarious
-## Version: 1.1.0
+## Version: 1.1.1
 ## X-Curse-Project-ID: 1573715
 ## SavedVariables: KeyRollReminderDB
 ## IconTexture: Interface\AddOns\KeyRollReminder\media\icon.tga
