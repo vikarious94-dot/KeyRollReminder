@@ -1,4 +1,18 @@
 # Changelog
+## Unreleased
+
+### Added
+- Added `/krr` and `/keyrollreminder` commands to open a group keystone window.
+- Added an initial group keystone window showing the player's key and group member slots.
+- Added dungeon icons to keystone text when a challenge map texture is available.
+- Added short dungeon labels next to keystone dungeon icons.
+- Added structured MDT-style rows to the group keystone window.
+- Added a dark shadow to dungeon icon labels for readability.
+- Added silent addon communication to request and share keystone data between group members using KeyRollReminder.
+
+### Fixed
+- Fixed addon message parsing so the sender name is read from the correct `CHAT_MSG_ADDON` argument.
+
 ## 1.1.1 - 2026-06-16
 
 ### Fixed

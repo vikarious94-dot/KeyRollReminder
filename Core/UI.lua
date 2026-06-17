@@ -3,6 +3,8 @@ local L = KeyRollReminder.L
 local ICON_PATH = "Interface\\AddOns\\KeyRollReminder\\media\\icon.tga"
 local REMINDER_SOUND = SOUNDKIT and (SOUNDKIT.IG_MAINMENU_OPEN or SOUNDKIT.IG_CHARACTER_INFO_OPEN)
 local CLOSE_SOUND = SOUNDKIT and (SOUNDKIT.IG_MAINMENU_CLOSE or SOUNDKIT.IG_CHARACTER_INFO_CLOSE)
+local GROUP_ROW_HEIGHT = 34
+local GROUP_MAX_ROWS = 5
 local DEFAULT_POSITION = {
     point = "CENTER",
     relativePoint = "CENTER",
@@ -54,6 +56,140 @@ function KeyRollReminder:ResetReminderPosition()
     if self.frame then
         RestoreFramePosition(self.frame)
     end
+end
+
+local function CreateGroupKeystoneRow(parent, index)
+    local row = CreateFrame("Frame", nil, parent)
+    row:SetSize(424, GROUP_ROW_HEIGHT)
+    row:SetPoint("TOPLEFT", parent.subtitle, "BOTTOMLEFT", 0, -12 - ((index - 1) * GROUP_ROW_HEIGHT))
+
+    row.icon = row:CreateTexture(nil, "ARTWORK")
+    row.icon:SetSize(28, 28)
+    row.icon:SetPoint("LEFT", row, "LEFT", 0, 0)
+
+    row.iconLabel = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    row.iconLabel:SetPoint("BOTTOM", row.icon, "BOTTOM", 0, 1)
+    row.iconLabel:SetJustifyH("CENTER")
+    row.iconLabel:SetTextColor(1, 1, 1)
+    row.iconLabel:SetShadowColor(0, 0, 0, 1)
+    row.iconLabel:SetShadowOffset(1, -1)
+
+    row.player = row:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    row.player:SetPoint("LEFT", row.icon, "RIGHT", 10, 0)
+    row.player:SetWidth(130)
+    row.player:SetJustifyH("LEFT")
+
+    row.dungeon = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    row.dungeon:SetPoint("LEFT", row.player, "RIGHT", 8, 0)
+    row.dungeon:SetWidth(190)
+    row.dungeon:SetJustifyH("LEFT")
+
+    row.level = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
+    row.level:SetPoint("RIGHT", row, "RIGHT", 0, 0)
+    row.level:SetWidth(48)
+    row.level:SetJustifyH("RIGHT")
+
+    row.unknown = row:CreateFontString(nil, "OVERLAY", "GameFontDisable")
+    row.unknown:SetPoint("LEFT", row.player, "RIGHT", 8, 0)
+    row.unknown:SetPoint("RIGHT", row, "RIGHT", 0, 0)
+    row.unknown:SetJustifyH("LEFT")
+
+    return row
+end
+
+local function UpdateGroupKeystoneRow(row, data)
+    if not data then
+        row:Hide()
+        return
+    end
+
+    row:Show()
+    row.player:SetText(data.name)
+
+    if data.mapName and data.level and data.level > 0 then
+        local _, texture = KeyRollReminder:GetChallengeMapDisplayInfo(data.mapID)
+        local shortName = KeyRollReminder:GetChallengeMapShortName(data.mapName)
+
+        row.icon:SetTexture(texture)
+        row.icon:SetShown(texture ~= nil)
+        row.iconLabel:SetText(shortName or "")
+        row.iconLabel:SetShown(texture ~= nil and shortName ~= nil)
+        row.dungeon:SetText(data.mapName)
+        row.dungeon:Show()
+        row.level:SetText(string.format("+%d", data.level))
+        row.level:Show()
+        row.unknown:Hide()
+    else
+        row.icon:Hide()
+        row.iconLabel:Hide()
+        row.dungeon:Hide()
+        row.level:Hide()
+        row.unknown:SetText(data.keyText or L.groupWindowUnknownKey)
+        row.unknown:Show()
+    end
+end
+
+local function CreateGroupKeystoneFrame()
+    local frame = CreateFrame("Frame", "KeyRollReminderGroupFrame", UIParent, "BasicFrameTemplateWithInset")
+    frame:SetSize(490, 255)
+    frame:SetPoint("CENTER", UIParent, "CENTER", 0, 120)
+    frame:SetFrameStrata("DIALOG")
+
+    if frame.TitleText then
+        frame.TitleText:SetText(L.groupWindowTitle)
+    end
+
+    frame.subtitle = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    frame.subtitle:SetPoint("TOPLEFT", frame, "TOPLEFT", 18, -36)
+    frame.subtitle:SetText(L.groupWindowSubtitle)
+
+    frame.rows = {}
+    for i = 1, GROUP_MAX_ROWS do
+        frame.rows[i] = CreateGroupKeystoneRow(frame, i)
+    end
+
+    frame.empty = frame:CreateFontString(nil, "OVERLAY", "GameFontDisable")
+    frame.empty:SetPoint("TOPLEFT", frame.rows[2], "TOPLEFT", 38, 0)
+    frame.empty:SetPoint("RIGHT", frame, "RIGHT", -18, 0)
+    frame.empty:SetJustifyH("LEFT")
+    frame.empty:SetText(L.groupWindowNoGroup)
+
+    local refreshButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+    refreshButton:SetSize(96, 24)
+    refreshButton:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -18, 16)
+    refreshButton:SetText(L.groupWindowRefresh)
+    refreshButton:SetScript("OnClick", function()
+        KeyRollReminder:UpdateGroupKeystoneFrame()
+    end)
+
+    tinsert(UISpecialFrames, "KeyRollReminderGroupFrame")
+
+    return frame
+end
+
+function KeyRollReminder:UpdateGroupKeystoneFrame()
+    local frame = self.groupFrame
+    if not frame then
+        return
+    end
+
+    local rows = self:GetGroupKeystoneRows()
+    local isGrouped = IsInGroup()
+
+    frame.empty:SetShown(not isGrouped)
+
+    for i = 1, GROUP_MAX_ROWS do
+        UpdateGroupKeystoneRow(frame.rows[i], rows[i])
+    end
+end
+
+function KeyRollReminder:ShowGroupKeystones()
+    if not self.groupFrame then
+        self.groupFrame = CreateGroupKeystoneFrame()
+    end
+
+    self:UpdateGroupKeystoneFrame()
+    self.groupFrame:Show()
 end
 
 local function CreateReminderFrame()
@@ -115,7 +251,7 @@ local function CreateReminderFrame()
     end)
 
     okButton:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT", 0, 0)
         GameTooltip:SetText(L.buttonOK, 1, 1, 1, nil, nil)
         GameTooltip:AddLine(L.buttonOKTooltip, 1, 1, 1)
         GameTooltip:AddLine(L.buttonOKTooltipShift, 0.8, 0.8, 0.8)
