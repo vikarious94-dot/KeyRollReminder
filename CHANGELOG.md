@@ -13,12 +13,16 @@
 ### Fixed
 - Fixed addon message parsing so the sender name is read from the correct `CHAT_MSG_ADDON` argument.
 
-## 1.1.1 - 2026-06-16
+## [1.1.1](https://github.com/vikarious94-dot/KeyRollReminder/tree/v1.1.1) - 2026-06-16
+
+[Full Changelog Previous Releases](https://github.com/vikarious94-dot/KeyRollReminder/compare/v1.1.0...v1.1.1)
 
 ### Fixed
 - Updated the TOC interface version for WoW 12.0.7.
 
-## 1.1.0 - 2026-06-15
+## [1.1.0](https://github.com/vikarious94-dot/KeyRollReminder/tree/v1.1.0) - 2026-06-15
+
+[Full Changelog Previous Releases](https://github.com/vikarious94-dot/KeyRollReminder/compare/f31b763...v1.1.0)
 
 ### Added
 - Added reminder popup position persistence between sessions.
@@ -35,7 +39,9 @@
 - Prevented the reminder from appearing after a run started by the player.
 - Made the keystone start button hook more reliable when the keystone receptacle opens.
 
-## 1.0.8 - 2026-06-14
+## [1.0.8](https://github.com/vikarious94-dot/KeyRollReminder/commit/f31b763) - 2026-06-14
+
+[Full Changelog Previous Releases](https://github.com/vikarious94-dot/KeyRollReminder/compare/v1.0.7...f31b763)
 
 ### Added
 - Added a dedicated locale module for addon text.
@@ -52,11 +58,13 @@
 ### Fixed
 - Fixed the package name metadata to match the addon folder name.
 
-## 1.0.7
+## [1.0.7](https://github.com/vikarious94-dot/KeyRollReminder/tree/v1.0.7)
+
+[Full Changelog Previous Releases](https://github.com/vikarious94-dot/KeyRollReminder/compare/v1.0.6...v1.0.7)
 
 - Fix interface version
 
-## 1.0.6
+## [1.0.6](https://github.com/vikarious94-dot/KeyRollReminder/tree/v1.0.6)
 
 - initial release
 - Added Mythic+ key reminder
