@@ -10,6 +10,9 @@
 - Added a dark shadow to dungeon icon labels for readability.
 - Added silent addon communication to request and share keystone data between group members using KeyRollReminder.
 
+### Fixed
+- Fixed addon message parsing so the sender name is read from the correct `CHAT_MSG_ADDON` argument.
+
 ## 1.1.1 - 2026-06-16
 
 ### Fixed

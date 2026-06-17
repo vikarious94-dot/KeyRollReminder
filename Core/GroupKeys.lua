@@ -149,10 +149,12 @@ function KeyRollReminder:RequestGroupKeystones()
     self:BroadcastOwnedKeystone()
 end
 
-function KeyRollReminder:HandleGroupKeystoneMessage(prefix, message, sender)
-    if prefix ~= ADDON_MESSAGE_PREFIX or not message or not sender then
+function KeyRollReminder:HandleGroupKeystoneMessage(prefix, message, channel, sender)
+    if prefix ~= ADDON_MESSAGE_PREFIX or not message or not channel or not sender then
         return
     end
+
+    self:Debug("Addon message received", channel, sender, message)
 
     if IsSenderPlayer(sender) then
         return

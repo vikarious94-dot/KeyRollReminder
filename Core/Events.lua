@@ -58,7 +58,8 @@ frame:SetScript("OnEvent", function(self, event, ...)
         end)
 
     elseif event == "CHAT_MSG_ADDON" then
-        KeyRollReminder:HandleGroupKeystoneMessage(...)
+        local prefix, message, channel, sender = ...
+        KeyRollReminder:HandleGroupKeystoneMessage(prefix, message, channel, sender)
 
     elseif event == "GROUP_ROSTER_UPDATE" then
         KeyRollReminder:ClearGroupKeystoneCache()
