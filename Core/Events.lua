@@ -29,6 +29,8 @@ frame:RegisterEvent("ADDON_LOADED")
 frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 frame:RegisterEvent("CHAT_MSG_ADDON")
 frame:RegisterEvent("GROUP_ROSTER_UPDATE")
+frame:RegisterEvent("SPELLS_CHANGED")
+frame:RegisterEvent("PLAYER_REGEN_ENABLED")
 frame:RegisterEvent("CHALLENGE_MODE_KEYSTONE_RECEPTABLE_OPEN")
 frame:RegisterEvent("CHALLENGE_MODE_START")
 frame:RegisterEvent("CHALLENGE_MODE_COMPLETED")
@@ -66,6 +68,17 @@ frame:SetScript("OnEvent", function(self, event, ...)
         if KeyRollReminder.groupFrame and KeyRollReminder.groupFrame:IsShown() then
             KeyRollReminder:UpdateGroupKeystoneFrame()
             KeyRollReminder:RequestGroupKeystones()
+        end
+
+    elseif event == "SPELLS_CHANGED" then
+        KeyRollReminder:ClearTeleportSpellCache()
+        if KeyRollReminder.groupFrame and KeyRollReminder.groupFrame:IsShown() then
+            KeyRollReminder:UpdateGroupKeystoneFrame()
+        end
+
+    elseif event == "PLAYER_REGEN_ENABLED" then
+        if KeyRollReminder.groupFrame and KeyRollReminder.groupFrame:IsShown() then
+            KeyRollReminder:UpdateGroupKeystoneFrame()
         end
 
     elseif event == "CHALLENGE_MODE_KEYSTONE_RECEPTABLE_OPEN" then

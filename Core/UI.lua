@@ -5,6 +5,7 @@ local REMINDER_SOUND = SOUNDKIT and (SOUNDKIT.IG_MAINMENU_OPEN or SOUNDKIT.IG_CH
 local CLOSE_SOUND = SOUNDKIT and (SOUNDKIT.IG_MAINMENU_CLOSE or SOUNDKIT.IG_CHARACTER_INFO_CLOSE)
 local GROUP_ROW_HEIGHT = 34
 local GROUP_MAX_ROWS = 5
+local GROUP_ROWS_TOP_OFFSET = 56
 local DEFAULT_POSITION = {
     point = "CENTER",
     relativePoint = "CENTER",
@@ -61,21 +62,32 @@ end
 local function CreateGroupKeystoneRow(parent, index)
     local row = CreateFrame("Frame", nil, parent)
     row:SetSize(424, GROUP_ROW_HEIGHT)
-    row:SetPoint("TOPLEFT", parent.subtitle, "BOTTOMLEFT", 0, -12 - ((index - 1) * GROUP_ROW_HEIGHT))
+    row:SetPoint(
+        "TOPLEFT",
+        parent,
+        "TOPLEFT",
+        18,
+        -GROUP_ROWS_TOP_OFFSET - ((index - 1) * GROUP_ROW_HEIGHT)
+    )
 
-    row.icon = row:CreateTexture(nil, "ARTWORK")
+    row.iconButton = CreateFrame("Button", nil, row, "InsecureActionButtonTemplate")
+    row.iconButton:SetSize(28, 28)
+    row.iconButton:SetPoint("LEFT", row, "LEFT", 0, 0)
+    row.iconButton:RegisterForClicks("AnyDown", "AnyUp")
+
+    row.icon = row.iconButton:CreateTexture(nil, "ARTWORK")
     row.icon:SetSize(28, 28)
-    row.icon:SetPoint("LEFT", row, "LEFT", 0, 0)
+    row.icon:SetAllPoints(row.iconButton)
 
-    row.iconLabel = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    row.iconLabel:SetPoint("BOTTOM", row.icon, "BOTTOM", 0, 1)
+    row.iconLabel = row.iconButton:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    row.iconLabel:SetPoint("BOTTOM", row.iconButton, "BOTTOM", 0, 1)
     row.iconLabel:SetJustifyH("CENTER")
     row.iconLabel:SetTextColor(1, 1, 1)
     row.iconLabel:SetShadowColor(0, 0, 0, 1)
     row.iconLabel:SetShadowOffset(1, -1)
 
     row.player = row:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    row.player:SetPoint("LEFT", row.icon, "RIGHT", 10, 0)
+    row.player:SetPoint("LEFT", row.iconButton, "RIGHT", 10, 0)
     row.player:SetWidth(130)
     row.player:SetJustifyH("LEFT")
 
@@ -94,7 +106,41 @@ local function CreateGroupKeystoneRow(parent, index)
     row.unknown:SetPoint("RIGHT", row, "RIGHT", 0, 0)
     row.unknown:SetJustifyH("LEFT")
 
+    row.iconButton:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT", 0, 0)
+        GameTooltip:SetText(row.teleportMapName or L.groupWindowTitle, 1, 1, 1, nil, nil)
+
+        if InCombatLockdown() then
+            GameTooltip:AddLine(L.groupTeleportInCombat, 1, 0.3, 0.3)
+        elseif row.teleportSpellID then
+            GameTooltip:AddLine(L.groupTeleportAvailable, 0.3, 1, 0.3)
+        else
+            GameTooltip:AddLine(L.groupTeleportUnavailable, 0.7, 0.7, 0.7)
+        end
+
+        GameTooltip:Show()
+    end)
+
+    row.iconButton:SetScript("OnLeave", function()
+        GameTooltip:Hide()
+    end)
+
     return row
+end
+
+local function GetTeleportSpellIDSafe(mapID)
+    local ok, spellID = pcall(
+        KeyRollReminder.GetDungeonTeleportSpellID,
+        KeyRollReminder,
+        mapID
+    )
+
+    if not ok then
+        KeyRollReminder:Debug("Dungeon teleport lookup failed", spellID)
+        return nil
+    end
+
+    return spellID
 end
 
 local function UpdateGroupKeystoneRow(row, data)
@@ -109,24 +155,61 @@ local function UpdateGroupKeystoneRow(row, data)
     if data.mapName and data.level and data.level > 0 then
         local _, texture = KeyRollReminder:GetChallengeMapDisplayInfo(data.mapID)
         local shortName = KeyRollReminder:GetChallengeMapShortName(data.mapName)
+        local teleportSpellID = GetTeleportSpellIDSafe(data.mapID)
 
         row.icon:SetTexture(texture)
-        row.icon:SetShown(texture ~= nil)
+        row.iconButton:SetShown(texture ~= nil)
         row.iconLabel:SetText(shortName or "")
         row.iconLabel:SetShown(texture ~= nil and shortName ~= nil)
+        row.teleportMapName = data.mapName
+        row.teleportSpellID = teleportSpellID
+
+        row.iconButton:SetAttribute("type", teleportSpellID and "spell" or nil)
+        row.iconButton:SetAttribute("spell", teleportSpellID)
+        row.iconButton:SetEnabled(true)
+        row.icon:SetDesaturated(false)
         row.dungeon:SetText(data.mapName)
         row.dungeon:Show()
         row.level:SetText(string.format("+%d", data.level))
         row.level:Show()
         row.unknown:Hide()
     else
-        row.icon:Hide()
+        row.iconButton:Hide()
         row.iconLabel:Hide()
+        row.teleportMapName = nil
+        row.teleportSpellID = nil
+
+        row.iconButton:SetAttribute("type", nil)
+        row.iconButton:SetAttribute("spell", nil)
+
         row.dungeon:Hide()
         row.level:Hide()
         row.unknown:SetText(data.keyText or L.groupWindowUnknownKey)
         row.unknown:Show()
     end
+end
+
+local function UpdateGroupKeystoneRowSafe(row, data)
+    local ok, errorMessage = pcall(UpdateGroupKeystoneRow, row, data)
+    if ok then
+        return
+    end
+
+    KeyRollReminder:Debug("Group keystone row update failed", errorMessage)
+
+    if not data then
+        row:Hide()
+        return
+    end
+
+    row:Show()
+    row.iconButton:Hide()
+    row.iconLabel:Hide()
+    row.player:SetText(data.name or "")
+    row.dungeon:Hide()
+    row.level:Hide()
+    row.unknown:SetText(data.keyText or L.groupWindowUnknownKey)
+    row.unknown:Show()
 end
 
 local function CreateGroupKeystoneFrame()
@@ -169,7 +252,7 @@ end
 
 function KeyRollReminder:UpdateGroupKeystoneFrame()
     local frame = self.groupFrame
-    if not frame then
+    if not frame or InCombatLockdown() then
         return
     end
 
@@ -179,11 +262,16 @@ function KeyRollReminder:UpdateGroupKeystoneFrame()
     frame.empty:SetShown(not isGrouped)
 
     for i = 1, GROUP_MAX_ROWS do
-        UpdateGroupKeystoneRow(frame.rows[i], rows[i])
+        UpdateGroupKeystoneRowSafe(frame.rows[i], rows[i])
     end
 end
 
 function KeyRollReminder:ShowGroupKeystones()
+    if InCombatLockdown() then
+        print("|cff00ff00KeyRollReminder:|r", L.groupWindowCombatUnavailable)
+        return
+    end
+
     if not self.groupFrame then
         self.groupFrame = CreateGroupKeystoneFrame()
     end

@@ -2,6 +2,7 @@
 ## Unreleased
 
 ### Added
+- Added clickable dungeon icons in `/krr` to cast learned dungeon teleport spells.
 - Added `/krr` and `/keyrollreminder` commands to open a group keystone window.
 - Added an initial group keystone window showing the player's key and group member slots.
 - Added dungeon icons to keystone text when a challenge map texture is available.
@@ -11,6 +12,8 @@
 - Added silent addon communication to request and share keystone data between group members using KeyRollReminder.
 
 ### Fixed
+- Fixed dungeon teleport lookup by mapping the instance ID returned by `GetMapUIInfo` to its teleport spell.
+- Kept dungeon icons fully colored when the teleport spell is not learned.
 - Fixed addon message parsing so the sender name is read from the correct `CHAT_MSG_ADDON` argument.
 
 ## [1.1.1](https://github.com/vikarious94-dot/KeyRollReminder/tree/v1.1.1) - 2026-06-16

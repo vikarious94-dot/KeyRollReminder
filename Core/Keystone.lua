@@ -1,5 +1,15 @@
 local KeyRollReminder = _G.KeyRollReminder
 local PLAYER_START_GRACE_SECONDS = 10
+local DUNGEON_TELEPORT_SPELLS = {
+    [658] = 1254555, -- Pit of Saron
+    [1209] = 159898, -- Skyreach
+    [1753] = 1254551, -- Seat of the Triumvirate
+    [2526] = 393273, -- Algeth'ar Academy
+    [2805] = 1254400, -- Windrunner Spire
+    [2811] = 1254572, -- Magisters' Terrace
+    [2874] = 1254559, -- Maisara Caverns
+    [2915] = 1254563, -- Nexus-Point Xenas
+}
 
 local function SafeCall(func, ...)
     if not func then
@@ -19,9 +29,9 @@ local function SafeCallValues(func, ...)
         return nil
     end
 
-    local ok, value1, value2, value3, value4, value5 = pcall(func, ...)
+    local ok, value1, value2, value3, value4, value5, value6 = pcall(func, ...)
     if ok then
-        return value1, value2, value3, value4, value5
+        return value1, value2, value3, value4, value5, value6
     end
 
     return nil
@@ -54,8 +64,10 @@ function KeyRollReminder:GetChallengeMapDisplayInfo(mapID)
         return nil, nil
     end
 
-    local mapName, _, _, texture = SafeCallValues(C_ChallengeMode and C_ChallengeMode.GetMapUIInfo, mapID)
-    return mapName, texture
+    local mapName, _, _, texture, _, instanceMapID =
+        SafeCallValues(C_ChallengeMode and C_ChallengeMode.GetMapUIInfo, mapID)
+
+    return mapName, texture, instanceMapID
 end
 
 function KeyRollReminder:GetChallengeMapIconMarkup(mapID, size)
@@ -67,6 +79,33 @@ function KeyRollReminder:GetChallengeMapIconMarkup(mapID, size)
 
     size = size or 22
     return string.format("|T%s:%d:%d:0:0|t", texture, size, size)
+end
+
+function KeyRollReminder:GetDungeonTeleportSpellID(mapID)
+    if not mapID then
+        return nil
+    end
+
+    local _, _, instanceMapID = self:GetChallengeMapDisplayInfo(mapID)
+    local spellID = instanceMapID and DUNGEON_TELEPORT_SPELLS[instanceMapID]
+
+    if not spellID then
+        return nil
+    end
+
+    if C_SpellBook and C_SpellBook.IsSpellKnownOrInSpellBook then
+        return C_SpellBook.IsSpellKnownOrInSpellBook(spellID) and spellID or nil
+    end
+
+    if IsSpellKnown then
+        return IsSpellKnown(spellID) and spellID or nil
+    end
+
+    return nil
+end
+
+function KeyRollReminder:ClearTeleportSpellCache()
+    -- Kept as a public no-op for event compatibility.
 end
 
 function KeyRollReminder:FormatKeystoneText(mapName, level, mapID)
