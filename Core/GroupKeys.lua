@@ -105,7 +105,7 @@ function KeyRollReminder:GetGroupKeystoneRows()
             mapName = mapName,
             level = level,
             mapID = mapID,
-            keyText = self:GetOwnedKeystoneText(),
+            keyText = self.L.ownedKeyMissing,
         },
     }
 

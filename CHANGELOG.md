@@ -2,6 +2,11 @@
 ## Unreleased
 
 ### Added
+- Added a compact LFG teleport prompt that opens when a Mythic+ LFG group is joined and shows a clickable dungeon icon.
+- Added teleport readiness and cooldown remaining text to the LFG teleport prompt.
+- Added cooldown desaturation on the LFG teleport prompt icon.
+- Moved the LFG teleport prompt cooldown text beside the dungeon icon.
+- Added best-effort LFG listing detection to open the teleport prompt for the joined group's dungeon when available.
 - Added clickable dungeon icons in `/krr` to cast learned dungeon teleport spells.
 - Added `/krr` and `/keyrollreminder` commands to open a group keystone window.
 - Added an initial group keystone window showing the player's key and group member slots.
@@ -12,6 +17,8 @@
 - Added silent addon communication to request and share keystone data between group members using KeyRollReminder.
 
 ### Fixed
+- Prevented pending LFG applications from replacing the dungeon detected from the group that was actually joined.
+- Fixed `/krr` teleport icon rows after sharing teleport button setup with the LFG teleport prompt.
 - Fixed dungeon teleport lookup by mapping the instance ID returned by `GetMapUIInfo` to its teleport spell.
 - Kept dungeon icons fully colored when the teleport spell is not learned.
 - Fixed addon message parsing so the sender name is read from the correct `CHAT_MSG_ADDON` argument.

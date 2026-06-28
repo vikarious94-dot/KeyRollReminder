@@ -4,8 +4,9 @@ local ICON_PATH = "Interface\\AddOns\\KeyRollReminder\\media\\icon.tga"
 local REMINDER_SOUND = SOUNDKIT and (SOUNDKIT.IG_MAINMENU_OPEN or SOUNDKIT.IG_CHARACTER_INFO_OPEN)
 local CLOSE_SOUND = SOUNDKIT and (SOUNDKIT.IG_MAINMENU_CLOSE or SOUNDKIT.IG_CHARACTER_INFO_CLOSE)
 local GROUP_ROW_HEIGHT = 34
-local GROUP_MAX_ROWS = 5
+local GROUP_MAX_ROWS = 6
 local GROUP_ROWS_TOP_OFFSET = 56
+local LFG_PROMPT_ICON_SIZE = 46
 local DEFAULT_POSITION = {
     point = "CENTER",
     relativePoint = "CENTER",
@@ -59,6 +60,68 @@ function KeyRollReminder:ResetReminderPosition()
     end
 end
 
+local SetTeleportButtonTooltip
+
+local function FormatCooldownTime(seconds)
+    seconds = math.max(0, math.ceil(seconds or 0))
+
+    if seconds >= 3600 then
+        local hours = math.floor(seconds / 3600)
+        local minutes = math.floor((seconds % 3600) / 60)
+        return string.format("%dh %02dm", hours, minutes)
+    end
+
+    if seconds >= 60 then
+        local minutes = math.floor(seconds / 60)
+        local remainingSeconds = seconds % 60
+        return string.format("%dm %02ds", minutes, remainingSeconds)
+    end
+
+    return string.format("%ds", seconds)
+end
+
+local function GetSpellCooldownRemaining(spellID)
+    if not spellID or not C_Spell or not C_Spell.GetSpellCooldown then
+        return nil
+    end
+
+    local cooldownInfo = C_Spell.GetSpellCooldown(spellID)
+    if not cooldownInfo or not cooldownInfo.startTime or not cooldownInfo.duration then
+        return nil
+    end
+
+    if cooldownInfo.duration <= 0 then
+        return nil
+    end
+
+    local remaining = cooldownInfo.startTime + cooldownInfo.duration - GetTime()
+    return remaining > 0 and remaining or nil
+end
+
+local function UpdateLFGTeleportPromptStatus(frame)
+    if not frame or not frame.status or not frame.iconButton then
+        return
+    end
+
+    local remaining = GetSpellCooldownRemaining(frame.iconButton.teleportSpellID)
+    if remaining then
+        frame.status:SetText(FormatCooldownTime(remaining))
+        frame.status:SetTextColor(1, 0.82, 0)
+        frame.iconButton.icon:SetDesaturated(true)
+    else
+        frame.status:SetText(L.lfgTeleportReady)
+        frame.status:SetTextColor(0.3, 1, 0.3)
+        frame.iconButton.icon:SetDesaturated(false)
+    end
+end
+
+local function StopLFGTeleportStatusTicker()
+    if KeyRollReminder.lfgTeleportStatusTicker then
+        KeyRollReminder.lfgTeleportStatusTicker:Cancel()
+        KeyRollReminder.lfgTeleportStatusTicker = nil
+    end
+end
+
 local function CreateGroupKeystoneRow(parent, index)
     local row = CreateFrame("Frame", nil, parent)
     row:SetSize(424, GROUP_ROW_HEIGHT)
@@ -71,23 +134,25 @@ local function CreateGroupKeystoneRow(parent, index)
     )
 
     row.iconButton = CreateFrame("Button", nil, row, "InsecureActionButtonTemplate")
-    row.iconButton:SetSize(28, 28)
+    row.iconButton:SetSize(424, GROUP_ROW_HEIGHT)
     row.iconButton:SetPoint("LEFT", row, "LEFT", 0, 0)
     row.iconButton:RegisterForClicks("AnyDown", "AnyUp")
 
     row.icon = row.iconButton:CreateTexture(nil, "ARTWORK")
     row.icon:SetSize(28, 28)
-    row.icon:SetAllPoints(row.iconButton)
+    row.icon:SetPoint("LEFT", row.iconButton, "LEFT", 0, 0)
+    row.iconButton.icon = row.icon
 
     row.iconLabel = row.iconButton:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    row.iconLabel:SetPoint("BOTTOM", row.iconButton, "BOTTOM", 0, 1)
+    row.iconLabel:SetPoint("BOTTOM", row.icon, "BOTTOM", 0, 1)
     row.iconLabel:SetJustifyH("CENTER")
     row.iconLabel:SetTextColor(1, 1, 1)
     row.iconLabel:SetShadowColor(0, 0, 0, 1)
     row.iconLabel:SetShadowOffset(1, -1)
+    row.iconButton.iconLabel = row.iconLabel
 
     row.player = row:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    row.player:SetPoint("LEFT", row.iconButton, "RIGHT", 10, 0)
+    row.player:SetPoint("LEFT", row.icon, "RIGHT", 10, 0)
     row.player:SetWidth(130)
     row.player:SetJustifyH("LEFT")
 
@@ -106,24 +171,7 @@ local function CreateGroupKeystoneRow(parent, index)
     row.unknown:SetPoint("RIGHT", row, "RIGHT", 0, 0)
     row.unknown:SetJustifyH("LEFT")
 
-    row.iconButton:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_RIGHT", 0, 0)
-        GameTooltip:SetText(row.teleportMapName or L.groupWindowTitle, 1, 1, 1, nil, nil)
-
-        if InCombatLockdown() then
-            GameTooltip:AddLine(L.groupTeleportInCombat, 1, 0.3, 0.3)
-        elseif row.teleportSpellID then
-            GameTooltip:AddLine(L.groupTeleportAvailable, 0.3, 1, 0.3)
-        else
-            GameTooltip:AddLine(L.groupTeleportUnavailable, 0.7, 0.7, 0.7)
-        end
-
-        GameTooltip:Show()
-    end)
-
-    row.iconButton:SetScript("OnLeave", function()
-        GameTooltip:Hide()
-    end)
+    SetTeleportButtonTooltip(row.iconButton)
 
     return row
 end
@@ -143,6 +191,47 @@ local function GetTeleportSpellIDSafe(mapID)
     return spellID
 end
 
+local function ConfigureTeleportButton(button, mapID, mapName)
+    local _, texture = KeyRollReminder:GetChallengeMapDisplayInfo(mapID)
+    local shortName = KeyRollReminder:GetChallengeMapShortName(mapName)
+    local teleportSpellID = GetTeleportSpellIDSafe(mapID)
+
+    button.icon:SetTexture(texture)
+    button.icon:SetShown(texture ~= nil)
+    button.iconLabel:SetText(shortName or "")
+    button.iconLabel:SetShown(texture ~= nil and shortName ~= nil)
+    button.teleportMapName = mapName
+    button.teleportSpellID = teleportSpellID
+
+    button:SetAttribute("type", teleportSpellID and "spell" or nil)
+    button:SetAttribute("spell", teleportSpellID)
+    button:SetEnabled(true)
+    button.icon:SetDesaturated(false)
+
+    return texture, teleportSpellID
+end
+
+SetTeleportButtonTooltip = function(button)
+    button:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT", 0, 0)
+        GameTooltip:SetText(self.teleportMapName or L.groupWindowTitle, 1, 1, 1, nil, nil)
+
+        if InCombatLockdown() then
+            GameTooltip:AddLine(L.groupTeleportInCombat, 1, 0.3, 0.3)
+        elseif self.teleportSpellID then
+            GameTooltip:AddLine(L.groupTeleportAvailable, 0.3, 1, 0.3)
+        else
+            GameTooltip:AddLine(L.groupTeleportUnavailable, 0.7, 0.7, 0.7)
+        end
+
+        GameTooltip:Show()
+    end)
+
+    button:SetScript("OnLeave", function()
+        GameTooltip:Hide()
+    end)
+end
+
 local function UpdateGroupKeystoneRow(row, data)
     if not data then
         row:Hide()
@@ -152,26 +241,14 @@ local function UpdateGroupKeystoneRow(row, data)
     row:Show()
     row.player:SetText(data.name)
 
-    if data.mapName and data.level and data.level > 0 then
-        local _, texture = KeyRollReminder:GetChallengeMapDisplayInfo(data.mapID)
-        local shortName = KeyRollReminder:GetChallengeMapShortName(data.mapName)
-        local teleportSpellID = GetTeleportSpellIDSafe(data.mapID)
-
-        row.icon:SetTexture(texture)
+    if data.mapName and data.mapID then
+        local texture = ConfigureTeleportButton(row.iconButton, data.mapID, data.mapName)
         row.iconButton:SetShown(texture ~= nil)
-        row.iconLabel:SetText(shortName or "")
-        row.iconLabel:SetShown(texture ~= nil and shortName ~= nil)
-        row.teleportMapName = data.mapName
-        row.teleportSpellID = teleportSpellID
-
-        row.iconButton:SetAttribute("type", teleportSpellID and "spell" or nil)
-        row.iconButton:SetAttribute("spell", teleportSpellID)
-        row.iconButton:SetEnabled(true)
-        row.icon:SetDesaturated(false)
         row.dungeon:SetText(data.mapName)
         row.dungeon:Show()
-        row.level:SetText(string.format("+%d", data.level))
-        row.level:Show()
+        local hasLevel = data.level and data.level > 0
+        row.level:SetText(hasLevel and string.format("+%d", data.level) or "")
+        row.level:SetShown(hasLevel == true)
         row.unknown:Hide()
     else
         row.iconButton:Hide()
@@ -214,7 +291,7 @@ end
 
 local function CreateGroupKeystoneFrame()
     local frame = CreateFrame("Frame", "KeyRollReminderGroupFrame", UIParent, "BasicFrameTemplateWithInset")
-    frame:SetSize(490, 255)
+    frame:SetSize(490, 289)
     frame:SetPoint("CENTER", UIParent, "CENTER", 0, 120)
     frame:SetFrameStrata("DIALOG")
 
@@ -278,6 +355,120 @@ function KeyRollReminder:ShowGroupKeystones()
 
     self:UpdateGroupKeystoneFrame()
     self.groupFrame:Show()
+end
+
+local function CreateLFGTeleportPromptFrame()
+    local frame = CreateFrame("Frame", "KeyRollReminderLFGTeleportFrame", UIParent, "BasicFrameTemplateWithInset")
+    frame:SetSize(168, 92)
+    frame:SetPoint("CENTER", UIParent, "CENTER", 0, 210)
+    frame:SetFrameStrata("DIALOG")
+    frame:SetMovable(true)
+    frame:EnableMouse(true)
+    frame:RegisterForDrag("LeftButton")
+    frame:SetScript("OnDragStart", frame.StartMoving)
+    frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
+
+    if frame.TitleText then
+        frame.TitleText:SetText(L.lfgTeleportWindowTitle)
+    end
+
+    frame.iconButton = CreateFrame("Button", nil, frame, "InsecureActionButtonTemplate")
+    frame.iconButton:SetSize(LFG_PROMPT_ICON_SIZE, LFG_PROMPT_ICON_SIZE)
+    frame.iconButton:SetPoint("LEFT", frame, "LEFT", 18, -6)
+    frame.iconButton:RegisterForClicks("AnyDown", "AnyUp")
+
+    frame.iconButton.icon = frame.iconButton:CreateTexture(nil, "ARTWORK")
+    frame.iconButton.icon:SetAllPoints(frame.iconButton)
+
+    frame.iconButton.iconLabel = frame.iconButton:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    frame.iconButton.iconLabel:SetPoint("BOTTOM", frame.iconButton, "BOTTOM", 0, 2)
+    frame.iconButton.iconLabel:SetJustifyH("CENTER")
+    frame.iconButton.iconLabel:SetTextColor(1, 1, 1)
+    frame.iconButton.iconLabel:SetShadowColor(0, 0, 0, 1)
+    frame.iconButton.iconLabel:SetShadowOffset(1, -1)
+
+    frame.status = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    frame.status:SetPoint("LEFT", frame.iconButton, "RIGHT", 10, 0)
+    frame.status:SetPoint("RIGHT", frame, "RIGHT", -12, 0)
+    frame.status:SetJustifyH("LEFT")
+    frame.status:SetText(L.lfgTeleportReady)
+
+    SetTeleportButtonTooltip(frame.iconButton)
+    tinsert(UISpecialFrames, "KeyRollReminderLFGTeleportFrame")
+
+    return frame
+end
+
+function KeyRollReminder:ShowLFGTeleportPrompt(lfgKeystone)
+    if not lfgKeystone or not lfgKeystone.mapID or not lfgKeystone.mapName then
+        return
+    end
+
+    if not GetTeleportSpellIDSafe(lfgKeystone.mapID) then
+        self:Debug("LFG teleport prompt skipped, teleport not learned", lfgKeystone.mapName)
+        return
+    end
+
+    if InCombatLockdown() then
+        self.pendingLFGTeleportPrompt = lfgKeystone
+        return
+    end
+
+    if not self.lfgTeleportFrame then
+        self.lfgTeleportFrame = CreateLFGTeleportPromptFrame()
+    end
+
+    ConfigureTeleportButton(self.lfgTeleportFrame.iconButton, lfgKeystone.mapID, lfgKeystone.mapName)
+    UpdateLFGTeleportPromptStatus(self.lfgTeleportFrame)
+    self.lfgTeleportFrame:Show()
+
+    if C_Timer and C_Timer.NewTicker then
+        StopLFGTeleportStatusTicker()
+
+        self.lfgTeleportStatusTicker = C_Timer.NewTicker(1, function()
+            if not self.lfgTeleportFrame or not self.lfgTeleportFrame:IsShown() then
+                StopLFGTeleportStatusTicker()
+                return
+            end
+
+            UpdateLFGTeleportPromptStatus(self.lfgTeleportFrame)
+        end)
+    end
+
+    if REMINDER_SOUND then
+        PlaySound(REMINDER_SOUND, "Master")
+    end
+end
+
+function KeyRollReminder:HideLFGTeleportPrompt()
+    self.pendingLFGTeleportPrompt = nil
+
+    if not self.lfgTeleportFrame or not self.lfgTeleportFrame:IsShown() then
+        self.pendingLFGTeleportHide = nil
+        return
+    end
+
+    if InCombatLockdown() then
+        self.pendingLFGTeleportHide = true
+        return
+    end
+
+    self.pendingLFGTeleportHide = nil
+    StopLFGTeleportStatusTicker()
+    self.lfgTeleportFrame:Hide()
+end
+
+function KeyRollReminder:FlushLFGTeleportPrompt()
+    if self.pendingLFGTeleportHide then
+        self.pendingLFGTeleportHide = nil
+        self:HideLFGTeleportPrompt()
+    end
+
+    if self.pendingLFGTeleportPrompt then
+        local lfgKeystone = self.pendingLFGTeleportPrompt
+        self.pendingLFGTeleportPrompt = nil
+        self:ShowLFGTeleportPrompt(lfgKeystone)
+    end
 end
 
 local function CreateReminderFrame()

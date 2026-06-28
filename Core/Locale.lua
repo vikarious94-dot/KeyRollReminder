@@ -12,6 +12,8 @@ local L = {
     groupWindowNoGroup = "You are not in a group.",
     groupWindowUnknownKey = "No key data yet",
     groupWindowRefresh = "Refresh",
+    lfgTeleportWindowTitle = "Teleport",
+    lfgTeleportReady = "teleport ready",
     groupTeleportAvailable = "Click to teleport to this dungeon.",
     groupTeleportUnavailable = "Dungeon teleport not learned.",
     groupTeleportInCombat = "Dungeon teleport is unavailable in combat.",
@@ -32,6 +34,8 @@ if locale == "frFR" then
     L.groupWindowNoGroup = "Vous n'etes pas en groupe."
     L.groupWindowUnknownKey = "Aucune donnee de cle pour le moment"
     L.groupWindowRefresh = "Rafraichir"
+    L.lfgTeleportWindowTitle = "TP"
+    L.lfgTeleportReady = "teleport ready"
     L.groupTeleportAvailable = "Cliquez pour vous teleporter vers ce donjon."
     L.groupTeleportUnavailable = "Teleportation vers ce donjon non apprise."
     L.groupTeleportInCombat = "La teleportation est indisponible en combat."

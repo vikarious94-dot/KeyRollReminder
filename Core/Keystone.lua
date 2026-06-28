@@ -1,5 +1,6 @@
 local KeyRollReminder = _G.KeyRollReminder
 local PLAYER_START_GRACE_SECONDS = 10
+local challengeMapInfoCache = {}
 local DUNGEON_TELEPORT_SPELLS = {
     [658] = 1254555, -- Pit of Saron
     [1209] = 159898, -- Skyreach
@@ -41,6 +42,19 @@ local function GetCurrentTime()
     return GetTime and GetTime() or time()
 end
 
+local function NormalizeDungeonText(text)
+    if not text then
+        return nil
+    end
+
+    text = string.lower(text)
+    text = string.gsub(text, "|c%x%x%x%x%x%x%x%x", "")
+    text = string.gsub(text, "|r", "")
+    text = string.gsub(text, "[^%w]+", "")
+
+    return text
+end
+
 function KeyRollReminder:GetChallengeMapShortName(mapName)
     if not mapName then
         return nil
@@ -64,10 +78,46 @@ function KeyRollReminder:GetChallengeMapDisplayInfo(mapID)
         return nil, nil
     end
 
+    local cachedInfo = challengeMapInfoCache[mapID]
+    if cachedInfo then
+        return cachedInfo.mapName, cachedInfo.texture, cachedInfo.instanceMapID
+    end
+
     local mapName, _, _, texture, _, instanceMapID =
         SafeCallValues(C_ChallengeMode and C_ChallengeMode.GetMapUIInfo, mapID)
 
+    if mapName or texture or instanceMapID then
+        challengeMapInfoCache[mapID] = {
+            mapName = mapName,
+            texture = texture,
+            instanceMapID = instanceMapID,
+        }
+    end
+
     return mapName, texture, instanceMapID
+end
+
+function KeyRollReminder:FindChallengeMapFromText(text)
+    local normalizedText = NormalizeDungeonText(text)
+    if not normalizedText or not C_ChallengeMode or not C_ChallengeMode.GetMapTable then
+        return nil, nil
+    end
+
+    local mapIDs = SafeCall(C_ChallengeMode.GetMapTable)
+    if type(mapIDs) ~= "table" then
+        return nil, nil
+    end
+
+    for _, mapID in ipairs(mapIDs) do
+        local mapName = self:GetChallengeMapDisplayInfo(mapID)
+        local normalizedMapName = NormalizeDungeonText(mapName)
+
+        if normalizedMapName and string.find(normalizedText, normalizedMapName, 1, true) then
+            return mapID, mapName
+        end
+    end
+
+    return nil, nil
 end
 
 function KeyRollReminder:GetChallengeMapIconMarkup(mapID, size)
@@ -95,10 +145,6 @@ function KeyRollReminder:GetDungeonTeleportSpellID(mapID)
 
     if C_SpellBook and C_SpellBook.IsSpellKnownOrInSpellBook then
         return C_SpellBook.IsSpellKnownOrInSpellBook(spellID) and spellID or nil
-    end
-
-    if IsSpellKnown then
-        return IsSpellKnown(spellID) and spellID or nil
     end
 
     return nil

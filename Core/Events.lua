@@ -29,6 +29,7 @@ frame:RegisterEvent("ADDON_LOADED")
 frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 frame:RegisterEvent("CHAT_MSG_ADDON")
 frame:RegisterEvent("GROUP_ROSTER_UPDATE")
+frame:RegisterEvent("LFG_LIST_JOINED_GROUP")
 frame:RegisterEvent("SPELLS_CHANGED")
 frame:RegisterEvent("PLAYER_REGEN_ENABLED")
 frame:RegisterEvent("CHALLENGE_MODE_KEYSTONE_RECEPTABLE_OPEN")
@@ -54,6 +55,7 @@ frame:SetScript("OnEvent", function(self, event, ...)
 
             local instanceName, instanceType = GetInstanceInfo()
             if instanceType == "party" then
+                KeyRollReminder:HideLFGTeleportPrompt()
                 KeyRollReminder:RefreshOwnedKeystone()
                 KeyRollReminder:Debug("Entered dungeon", instanceName, "owned key", KeyRollReminder.myKeyLevel)
             end
@@ -64,11 +66,19 @@ frame:SetScript("OnEvent", function(self, event, ...)
         KeyRollReminder:HandleGroupKeystoneMessage(prefix, message, channel, sender)
 
     elseif event == "GROUP_ROSTER_UPDATE" then
+        if not IsInGroup() then
+            KeyRollReminder:HideLFGTeleportPrompt()
+        end
+
         KeyRollReminder:ClearGroupKeystoneCache()
         if KeyRollReminder.groupFrame and KeyRollReminder.groupFrame:IsShown() then
             KeyRollReminder:UpdateGroupKeystoneFrame()
             KeyRollReminder:RequestGroupKeystones()
         end
+
+    elseif event == "LFG_LIST_JOINED_GROUP" then
+        local searchResultID = ...
+        KeyRollReminder:HandleLFGJoinedGroup(searchResultID)
 
     elseif event == "SPELLS_CHANGED" then
         KeyRollReminder:ClearTeleportSpellCache()
@@ -77,6 +87,8 @@ frame:SetScript("OnEvent", function(self, event, ...)
         end
 
     elseif event == "PLAYER_REGEN_ENABLED" then
+        KeyRollReminder:FlushLFGTeleportPrompt()
+
         if KeyRollReminder.groupFrame and KeyRollReminder.groupFrame:IsShown() then
             KeyRollReminder:UpdateGroupKeystoneFrame()
         end

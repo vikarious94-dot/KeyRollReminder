@@ -1,6 +1,8 @@
 # IDE settings
 .vscode/
 .idea/
+.agent/
+.agents/
 *.code-workspace
 
 # Operating system files

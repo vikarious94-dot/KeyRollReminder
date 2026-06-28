@@ -10,6 +10,7 @@
 KeyRollReminder.lua
 Core/Locale.lua
 Core/Keystone.lua
+Core/LFG.lua
 Core/GroupKeys.lua
 Core/Events.lua
 Core/UI.lua
